@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 
 const App = () => {
     const [data, setData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [currentCustomerId, setCurrentCustomerId] = useState(null);
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -73,6 +74,48 @@ const App = () => {
         }
     };
 
+    const handleUpdate = async () => {
+        const updatedData = {
+            Id: currentCustomerId,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            phoneNumber: formData.phoneNumber
+        };
+        try {
+            const response = await fetch(`https://localhost:44300/api/Customers/${currentCustomerId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+            });
+            if (!response.ok) {
+                throw new Error(`Failed to update customer: ${response.statusText}`);
+            }
+
+            // Verificar se a resposta não está vazia antes de tentar converter para JSON
+            const text = await response.text();
+            const updatedCustomer = text ? JSON.parse(text) : {}; // Converter apenas se houver conteúdo
+
+            console.log('Updated customer:', updatedCustomer);
+            fetchData(); // Atualizar a lista de clientes
+            setShowModal(false); // Fechar o modal de edição
+            setFormData({
+                firstName: '',
+                lastName: '',
+                email: '',
+                phoneNumber: ''
+            });
+            setEditMode(false);
+            setCurrentCustomerId(null);
+        } catch (error) {
+            console.error('Error updating customer:', error);
+        }
+    };
+
+
+
     const handleDelete = async (id) => {
         const confirmDelete = window.confirm('Tem certeza que deseja deletar este cliente?');
         if (confirmDelete) {
@@ -84,11 +127,23 @@ const App = () => {
                     throw new Error(`Failed to delete customer: ${response.statusText}`);
                 }
                 console.log(`Deleted customer with id: ${id}`);
-                fetchData(); 
+                fetchData();
             } catch (error) {
                 console.error('Error deleting customer:', error);
             }
         }
+    };
+
+    const handleEdit = (customer) => {
+        setFormData({
+            firstName: customer.firstName,
+            lastName: customer.lastName,
+            email: customer.email,
+            phoneNumber: customer.phoneNumber
+        });
+        setCurrentCustomerId(customer.id);
+        setEditMode(true);
+        setShowModal(true);
     };
 
     return (
@@ -131,29 +186,25 @@ const App = () => {
                     <table style={{ width: '60%', margin: 'auto', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr>
-                                <td colSpan="3"><h1>Lista de Clientes</h1></td>
+                                <td colSpan="4"><h1>Lista de Clientes</h1></td>
                             </tr>
                             <tr>
                                 <th>Nome</th>
                                 <th>Email</th>
                                 <th>Telefone</th>
+                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody>
                             {data.map(customer => (
                                 <tr key={customer.id}>
-                                    <td>
-                                        <a
-                                            href="#"
-                                            onClick={() => handleDelete(customer.id)}
-                                            className="tooltip"
-                                        >
-                                            {customer.firstName} {customer.lastName}
-                                            <span className="tooltiptext">Clique Aqui para apagar o Registro.</span>
-                                        </a>
-                                    </td>
+                                    <td>{customer.firstName} {customer.lastName}</td>
                                     <td>{customer.email}</td>
                                     <td>{customer.phoneNumber}</td>
+                                    <td>
+                                        <button onClick={() => handleEdit(customer)}>Editar</button>
+                                        <button onClick={() => handleDelete(customer.id)}>Deletar</button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -162,7 +213,16 @@ const App = () => {
                     <p>Nenhum cliente encontrado.</p>
                 )
             )}
-            <button onClick={() => setShowModal(true)} style={{ margin: '20px', padding: '10px 20px' }}>Adicionar Cliente</button>
+            <button onClick={() => {
+                setShowModal(true);
+                setEditMode(false);
+                setFormData({
+                    firstName: '',
+                    lastName: '',
+                    email: '',
+                    phoneNumber: ''
+                });
+            }} style={{ margin: '20px', padding: '10px 20px' }}>Adicionar Cliente</button>
 
             {showModal && (
                 <div style={{
@@ -182,10 +242,14 @@ const App = () => {
                         borderRadius: '8px',
                         width: '300px'
                     }}>
-                        <h2>Adicionar Cliente</h2>
+                        <h2>{editMode ? 'Editar Cliente' : 'Adicionar Cliente'}</h2>
                         <form onSubmit={(e) => {
                             e.preventDefault();
-                            handleSubmit();
+                            if (editMode) {
+                                handleUpdate();
+                            } else {
+                                handleSubmit();
+                            }
                         }}>
                             <div>
                                 <label>Nome:</label>
@@ -204,7 +268,9 @@ const App = () => {
                                 <input type="text" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} required />
                             </div>
                             <div style={{ marginTop: '10px' }}>
-                                <button type="submit" style={{ marginRight: '10px', padding: '5px 10px' }}>Salvar</button>
+                                <button type="submit" style={{ marginRight: '10px', padding: '5px 10px' }}>
+                                    {editMode ? 'Atualizar' : 'Salvar'}
+                                </button>
                                 <button type="button" onClick={() => setShowModal(false)} style={{ padding: '5px 10px' }}>Fechar</button>
                             </div>
                         </form>
