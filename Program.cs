@@ -1,33 +1,35 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using CustomerManagement.Models;
-
-
 
 var builder = WebApplication.CreateBuilder(args);
 
-
-// Configurar DbContext e outros serviços
+// Configurar DbContext
 builder.Services.AddDbContext<CustomerContext>(options =>
-options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
-
-// Adicionar serviços ao contêiner.
+// serviços ao contêiner.
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
-
-
-
-
-// Configurar o DbContext para usar SQLite
-builder.Services.AddDbContext<CustomerContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+// CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost3001",
+                      builder =>
+                      {
+                          builder.WithOrigins("http://localhost:3000")
+                                 .AllowAnyHeader()
+                                 .AllowAnyMethod();
+                      });
+});
 
 var app = builder.Build();
 
-// Configurar o pipeline de solicitação HTTP.
+
 if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
@@ -40,6 +42,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseRouting();
+
+// Habilitar CORS
+app.UseCors("AllowLocalhost3001");
 
 app.UseAuthorization();
 

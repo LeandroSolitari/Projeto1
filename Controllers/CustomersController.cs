@@ -55,7 +55,7 @@ namespace CustomerManagement.Controllers
         {
             if (id != customer.Id)
             {
-                return BadRequest(); // Retorna 400 Bad Request se o ID do cliente na URL não corresponder ao ID do cliente no corpo da requisição
+                return BadRequest(); 
             }
 
             _context.Entry(customer).State = EntityState.Modified;
@@ -68,15 +68,15 @@ namespace CustomerManagement.Controllers
             {
                 if (!CustomerExists(id))
                 {
-                    return NotFound(); // Retorna 404 Not Found se o cliente com o ID especificado não existir
+                    return NotFound(); 
                 }
                 else
                 {
-                    throw; // Qualquer outra exceção durante o salvamento é lançada
+                    throw; // 
                 }
             }
 
-            return NoContent(); // Retorna 204 No Content se a atualização for bem-sucedida
+            return NoContent(); 
         }
 
 

@@ -11,7 +11,7 @@ namespace CustomerManagement.Data
 
         public DbSet<Customer> Customers { get; set; }
 
-        // Outras entidades DbSet aqui...
+        
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -23,7 +23,7 @@ namespace CustomerManagement.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // Configurações do modelo aqui (opcional)
+            
         }
     }
 }
