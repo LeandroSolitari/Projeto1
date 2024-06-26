@@ -94,9 +94,9 @@ const App = () => {
                 throw new Error(`Failed to update customer: ${response.statusText}`);
             }
 
-            // Verificar se a resposta não está vazia antes de tentar converter para JSON
+            
             const text = await response.text();
-            const updatedCustomer = text ? JSON.parse(text) : {}; // Converter apenas se houver conteúdo
+            const updatedCustomer = text ? JSON.parse(text) : {}; 
 
             console.log('Updated customer:', updatedCustomer);
             fetchData(); // Atualizar a lista de clientes
